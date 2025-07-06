@@ -179,12 +179,14 @@ class RarExtractor(ArchiveExtractor):
 
 # --- Factory Function (Optional, for easy instantiation) ---
 
-def get_extractor(file_extension: str) -> ArchiveExtractor:
+# --- Factory Function (Optional, for easy instantiation) ---
+
+def get_extractor(file_path_or_name: str) -> ArchiveExtractor:
     """
     Factory function to get the appropriate extractor based on file extension.
 
     Args:
-        file_extension (str): The file extension (e.g., ".zip", ".tar", ".7z", ".rar").
+        file_path_or_name (str): The full file path or file name (e.g., "archive.zip", "/path/to/my/archive.tar.gz").
 
     Returns:
         ArchiveExtractor: An instance of the concrete extractor class.
@@ -205,38 +207,45 @@ def get_extractor(file_extension: str) -> ArchiveExtractor:
         ".rar": RarExtractor,
     }
 
-    # Normalize extension (e.g., remove leading dot, handle .tar.gz)
-    normalized_ext = file_extension.lower()
-    if normalized_ext.startswith('.'):
-        normalized_ext = normalized_ext[1:]
+    # Extract the extension from the file path or name
+    _, ext = os.path.splitext(file_path_or_name)
+    normalized_ext = ext.lower()
 
-    # Handle compound extensions like .tar.gz
-    if normalized_ext.endswith('tar.gz'):
-        normalized_ext = 'gz'
-    elif normalized_ext.endswith('tar.bz2'):
-        normalized_ext = 'bz2'
-    elif normalized_ext.endswith('tar.xz'):
-        normalized_ext = 'xz'
-    elif normalized_ext.endswith('tar'):
-        normalized_ext = 'tar'
+    # Handle compound extensions like .tar.gz, .tar.bz2, .tar.xz
+    # os.path.splitext will give .gz for .tar.gz, so we need to check the full name
+    if file_path_or_name.lower().endswith('.tar.gz'):
+        normalized_ext = '.gz'
+    elif file_path_or_name.lower().endswith('.tar.bz2'):
+        normalized_ext = '.bz2'
+    elif file_path_or_name.lower().endswith('.tar.xz'):
+        normalized_ext = '.xz'
+    elif file_path_or_name.lower().endswith('.tgz'):
+        normalized_ext = '.tgz'
+    elif file_path_or_name.lower().endswith('.tbz2'):
+        normalized_ext = '.tbz2'
+    elif file_path_or_name.lower().endswith('.txz'):
+        normalized_ext = '.txz'
+    elif file_path_or_name.lower().endswith('.tar'):
+        normalized_ext = '.tar'
 
 
     extractor_class = None
-    # Check for exact match first
-    if f".{normalized_ext}" in extension_map:
-        extractor_class = extension_map[f".{normalized_ext}"]
-    # Then check for common compressed tar extensions
-    elif normalized_ext in ['gz', 'bz2', 'xz']:
+    # Check for exact match in the map
+    if normalized_ext in extension_map:
+        extractor_class = extension_map[normalized_ext]
+    # Handle the cases where os.path.splitext gives a single extension for a multi-part one
+    elif normalized_ext == '.gz' and '.tar.gz' in file_path_or_name.lower():
         extractor_class = TarExtractor
-    # Finally, check for .7z and .rar
-    elif normalized_ext in ['7z', 'rar']:
-        extractor_class = extension_map[f".{normalized_ext}"]
+    elif normalized_ext == '.bz2' and '.tar.bz2' in file_path_or_name.lower():
+        extractor_class = TarExtractor
+    elif normalized_ext == '.xz' and '.tar.xz' in file_path_or_name.lower():
+        extractor_class = TarExtractor
 
 
     if extractor_class:
         return extractor_class()
     else:
-        raise ValueError(f"No extractor found for file type: {file_extension}")
+        raise ValueError(f"No extractor found for file type: {file_path_or_name} (derived extension: {normalized_ext})")
 
 # --- Example Usage (for demonstration) ---
 if __name__ == "__main__":
@@ -271,7 +280,8 @@ if __name__ == "__main__":
     # --- Test Zip Extraction ---
     print("\n--- Testing Zip Extraction ---")
     try:
-        zip_extractor = get_extractor(".zip")
+        # Now passing the full path
+        zip_extractor = get_extractor(zip_file_path)
         zip_extractor.extract(zip_file_path, zip_dest)
         print(f"Contents of {zip_dest}: {os.listdir(zip_dest)}")
         print(f"Contents of {os.path.join(zip_dest, 'subdir')}: {os.listdir(os.path.join(zip_dest, 'subdir'))}")
@@ -281,8 +291,8 @@ if __name__ == "__main__":
     # --- Test Tar.gz Extraction ---
     print("\n--- Testing Tar.gz Extraction ---")
     try:
-        # Note: get_extractor can take ".tar.gz" or just ".gz"
-        tar_extractor = get_extractor(".tar.gz")
+        # Now passing the full path
+        tar_extractor = get_extractor(tar_gz_file_path)
         tar_extractor.extract(tar_gz_file_path, tar_dest)
         print(f"Contents of {tar_dest}: {os.listdir(tar_dest)}")
     except Exception as e:
@@ -294,7 +304,8 @@ if __name__ == "__main__":
     with open(dummy_7z_path, 'w') as f: # Create a dummy file to simulate a .7z
         f.write("Not a real 7z file content")
     try:
-        sevenz_extractor = get_extractor(".7z")
+        # Now passing the full path
+        sevenz_extractor = get_extractor(dummy_7z_path)
         sevenz_extractor.extract(dummy_7z_path, sevenz_dest)
     except NotImplementedError as e:
         print(f"7z extraction correctly raised NotImplementedError: {e}")
@@ -311,7 +322,8 @@ if __name__ == "__main__":
     with open(dummy_rar_path, 'w') as f: # Create a dummy file to simulate a .rar
         f.write("Not a real rar file content")
     try:
-        rar_extractor = get_extractor(".rar")
+        # Now passing the full path
+        rar_extractor = get_extractor(dummy_rar_path)
         rar_extractor.extract(dummy_rar_path, rar_dest)
     except NotImplementedError as e:
         print(f"Rar extraction correctly raised NotImplementedError: {e}")
