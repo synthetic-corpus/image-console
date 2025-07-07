@@ -3,6 +3,8 @@ import zipfile
 import tarfile
 import os
 import shutil
+import rarfile
+import py7zr
 
 # --- Abstract Base Class ---
 
@@ -76,10 +78,10 @@ class ZipExtractor(ArchiveExtractor):
                 print("Zip extraction complete.")
         except zipfile.BadZipFile as e:
             print(f"Error: The file '{archive_path}' is not a valid zip file or is corrupted. {e}")
-            raise
+
         except Exception as e:
             print(f"An unexpected error occurred during zip extraction: {e}")
-            raise
+
 
 class TarExtractor(ArchiveExtractor):
     """
@@ -114,68 +116,105 @@ class TarExtractor(ArchiveExtractor):
                 print("Tar extraction complete.")
         except tarfile.ReadError as e:
             print(f"Error: The file '{archive_path}' is not a valid tar file or is corrupted. {e}")
-            raise
+
         except Exception as e:
             print(f"An unexpected error occurred during tar extraction: {e}")
-            raise
+
 
 class SevenZExtractor(ArchiveExtractor):
     """
-    Placeholder for .7z file extraction.
-
-    Requires an external library like 'py7zr' or a system command-line tool '7z'.
+    Concrete implementation for extracting .7z files using the 'py7zr' library.
     """
 
-    def extract(self, archive_path: str, destination_path: str):
+    def extract(self, archive_path: str, destination_path: str, password: str = None):
         """
-        Attempts to extract a .7z file.
-
-        Note: This requires an external library (e.g., 'py7zr' via pip install py7zr)
-        or calling the '7z' command-line tool via subprocess.
-        This implementation only raises an error as it's not part of standard library.
+        Extracts the contents of a .7z file using the 'py7zr' library.
 
         Args:
             archive_path (str): The path to the .7z file.
             destination_path (str): The directory where contents will be extracted.
+            password (str, optional): Password for encrypted 7z archives. Defaults to None.
 
         Raises:
-            NotImplementedError: Always, as direct .7z extraction is not in standard library.
+            FileNotFoundError: If the .7z file does not exist.
+            py7zr.Bad7zFile: If the .7z file is corrupted or not a valid 7z archive.
+            py7zr.PasswordRequired: If the archive is password-protected and no password is provided.
+            py7zr.IncorrectPassword: If the provided password is incorrect.
+            Exception: For other unexpected errors during extraction.
         """
-        print(f"Attempting to extract .7z file: {archive_path}")
-        print("Warning: .7z extraction requires an external library (e.g., 'py7zr') or system tool ('7z').")
-        raise NotImplementedError(
-            "7z extraction is not supported by Python's standard library. "
-            "Consider installing 'py7zr' (pip install py7zr) or using 'subprocess' to call the '7z' command-line tool."
-        )
+        if not os.path.exists(archive_path):
+            raise FileNotFoundError(f"7z archive not found: {archive_path}")
+        if os.path.isdir(archive_path):
+            raise IsADirectoryError(f"'{archive_path}' is a directory, not a 7z file.")
+
+        self._ensure_destination_path(destination_path)
+
+        try:
+            with py7zr.SevenZipFile(archive_path, mode='r', password=password) as szf:
+                print(f"Extracting '{archive_path}' to '{destination_path}'...")
+                szf.extractall(path=destination_path)
+                print("7z extraction complete.")
+        except py7zr.Bad7zFile as e:
+            print(f"Error: The file '{archive_path}' is not a valid 7z file or is corrupted. {e}")
+
+        except py7zr.PasswordRequired as e:
+            print(f"Error: The 7z archive '{archive_path}' is password-protected but no password was provided. {e}")
+
+        except py7zr.IncorrectPassword as e:
+            print(f"Error: Incorrect password provided for '{archive_path}'. {e}")
+
+        except Exception as e:
+            print(f"An unexpected error occurred during 7z extraction: {e}")
+
+
 
 class RarExtractor(ArchiveExtractor):
     """
-    Placeholder for .rar file extraction.
-
-    Requires an external library like 'rarfile' or a system command-line tool 'unrar'.
+    Concrete implementation for extracting .rar files using the 'rarfile' library.
     """
 
-    def extract(self, archive_path: str, destination_path: str):
+    def extract(self, archive_path: str, destination_path: str, password: str = None):
         """
-        Attempts to extract a .rar file.
-
-        Note: This requires an external library (e.g., 'rarfile' via pip install rarfile)
-        or calling the 'unrar' command-line tool via subprocess.
-        This implementation only raises an error as it's not part of standard library.
+        Extracts the contents of a .rar file using the 'rarfile' library.
 
         Args:
             archive_path (str): The path to the .rar file.
             destination_path (str): The directory where contents will be extracted.
+            password (str, optional): Password for encrypted RAR archives. Defaults to None.
 
         Raises:
-            NotImplementedError: Always, as direct .rar extraction is not in standard library.
+            FileNotFoundError: If the .rar file does not exist.
+            rarfile.BadRarFile: If the .rar file is corrupted or not a valid RAR archive.
+            rarfile.RarKeyError: If the archive is password-protected and an incorrect or no password is provided.
+            rarfile.RarCannotExec: If the 'unrar' command-line tool is not found in the system's PATH.
+            Exception: For other unexpected errors during extraction.
         """
-        print(f"Attempting to extract .rar file: {archive_path}")
-        print("Warning: .rar extraction requires an external library (e.g., 'rarfile') or system tool ('unrar').")
-        raise NotImplementedError(
-            "RAR extraction is not supported by Python's standard library. "
-            "Consider installing 'rarfile' (pip install rarfile) or using 'subprocess' to call the 'unrar' command-line tool."
-        )
+        if not os.path.exists(archive_path):
+            raise FileNotFoundError(f"RAR archive not found: {archive_path}")
+        if os.path.isdir(archive_path):
+            raise IsADirectoryError(f"'{archive_path}' is a directory, not a RAR file.")
+
+        self._ensure_destination_path(destination_path)
+
+        try:
+            with rarfile.RarFile(archive_path, 'r') as rf:
+                if password:
+                    rf.setpassword(password) # Set password if provided
+                print(f"Extracting '{archive_path}' to '{destination_path}'...")
+                rf.extractall(destination_path)
+                print("RAR extraction complete.")
+        except rarfile.BadRarFile as e:
+            print(f"Error: The file '{archive_path}' is not a valid RAR file or is corrupted. {e}")
+
+        except rarfile.RarKeyError as e:
+            print(f"Error: Incorrect or missing password for '{archive_path}'. {e}")
+
+        except rarfile.RarCannotExec as e:
+            print(f"Error: The 'unrar' command-line tool was not found. Please ensure it is installed and in your system's PATH. {e}")
+
+        except Exception as e:
+            print(f"An unexpected error occurred during RAR extraction: {e}")
+
 
 # --- Factory Function (Optional, for easy instantiation) ---
 
