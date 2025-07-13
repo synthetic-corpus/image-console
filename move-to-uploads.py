@@ -88,6 +88,10 @@ def traverse_path(directory):
                 all_files.append(item[0])
                 file_name = get_file_name(item[0])
                 print(f'Move or Save to s3 here: {file_name}')
+                if not local_source:
+                    # Give the file a random name 
+                    # and place in s3 uploads.
+                    print('Will go to s3 from here!')
 
 if local_source:
     print(local_source)
@@ -112,3 +116,16 @@ if local_source:
         traverse_path(destination)
         print(f'completed job ${job}. Deleting temp folder')
         shutil.rmtree(destination)
+
+else:
+    print("extracting from an s3 Bucket")
+    keys = [] # a list of Keys from the s3 bucket
+    for key in keys:
+        job = uuid.uuid()
+        save_point = os.path.join(work_space, str(job))
+        extract_point = os.path.join(save_point, 'output')
+        # Todo: Copy the Archive to Save Point
+        extractor = get_extractor('archive')
+        extractor.extract('archive', extract_point)
+        traverse_path(extract_point)
+        shutil.rmtree(save_point)
