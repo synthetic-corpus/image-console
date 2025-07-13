@@ -10,6 +10,7 @@ import pathlib
 import re
 import uuid
 import shutil
+import argparse
 from extractors import get_extractor
 from s3_access import S3Access
 from randomizer import rename
