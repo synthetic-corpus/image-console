@@ -1,4 +1,5 @@
 import boto3
+import random
 from botocore.exceptions import ClientError
 
 
@@ -14,6 +15,14 @@ class S3Access:
         """
         self.bucket_name = bucket_name
         self.s3_client = boto3.client('s3')
+
+    def list_root_random(self, size=5):
+        """ For testing. Gets random files in Root."""
+        extracted = self.s3_client.list_objects_v2(
+            Bucket=self.bucket_name,
+            Prefix = '' # To exclude what is folders
+        )
+        return random.sample(extracted, k=size)
 
     def list_sources(self):
         """

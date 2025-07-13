@@ -11,19 +11,24 @@ import re
 import uuid
 import shutil
 from extractors import get_extractor
+from s3_access import S3Access
+from randomizer import rename
 
+s3_bucket = os.environ.get('S3_BUCKET_NAME')
 # Check first if we're runnin is EC2,
 # In which case, use ebs.
 
 if os.path.exists('/mnt/ebs_volume'):
     local_source = None # because we'll use s3
     work_space = os.path('/mnt/ebs_volume')
+    print(f'my workspace is: ${work_space}')
 else:
     local_source = os.path.abspath('root/zips')
     os.makedirs('root/work_space', exist_ok=True)
     work_space = os.path.abspath('root/work_space')
     os.makedirs('root/results', exist_ok=True)
     results = os.path.abspath('root/results')
+    print(f'my workspace is ${results}')
 
 def list_directory_contents(directory_path):
     """
@@ -91,7 +96,9 @@ def traverse_path(directory):
                 if not local_source:
                     # Give the file a random name 
                     # and place in s3 uploads.
-                    print('Will go to s3 from here!')
+                    r_name = rename(file_name)
+                    print(f'{file_name} randomize to ${r_name}')
+                    print(f'{file_name} Will go to s3 from here!')
 
 if local_source:
     print(local_source)
@@ -119,13 +126,15 @@ if local_source:
 
 else:
     print("extracting from an s3 Bucket")
-    keys = [] # a list of Keys from the s3 bucket
+    s3access = S3Access(s3_bucket)
+    keys = s3access.list_root_random() # a list of Keys from the s3 bucket
     for key in keys:
         job = uuid.uuid()
         save_point = os.path.join(work_space, str(job))
         extract_point = os.path.join(save_point, 'output')
+        archive = s3access.get_object(key)
         # Todo: Copy the Archive to Save Point
-        extractor = get_extractor('archive')
-        extractor.extract('archive', extract_point)
+        extractor = get_extractor(archive)
+        extractor.extract(archive, extract_point)
         traverse_path(extract_point)
         shutil.rmtree(save_point)
