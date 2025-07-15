@@ -5,6 +5,7 @@
 import os
 
 from randomizer import rename
+from s3_access import S3Access
 
 class ArchiveExtract():
     def __init__(self, local=False, test=True):
@@ -75,11 +76,22 @@ class ArchiveExtract():
                 else:
                     all_files.append(item[0])
                     file_name = self.get_file_name(item[0])
+                    all_files.append((item[0],file_name))
+        for file_tuple in all_files:
+            """ file_tuple = (path, filename) """
+            bucket = os.environ.get('S3_BUCKET_NAME')
+            try:
+                with open(file_tuple[0], 'r') as file_object:
+                    r_name = rename(file_tuple[1])
                     if self.test:
-                        # Give the file a random name 
-                        # and place in s3 uploads.
-                        r_name = rename(file_name)
-                        print(f'{file_name} randomize to ${r_name}')
-                        print(f'{file_name} Will go to s3 from here!')
+                        sub = 'dry run only'
                     else:
-                        print("will save to s3 for real here!")
+                        sub = f'storing to s3: {bucket}'
+                    msg = f'{file_tuple[1]} becomes {r_name} - {sub}'
+                    print(msg)
+                    if self.test == False:
+                        key = f'upload/{r_name}'
+                        s3access = S3Access(bucket)
+                        s3access.put_object(key, file_object)
+            except Exception as e:
+                print(e)

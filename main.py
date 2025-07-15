@@ -3,6 +3,11 @@
 ##############################################
 
 import argparse
+import os
+from run_extract import ArchiveExtract
+from s3_access import S3Access
+
+bucket = os.environ.get('S3_BUCKET_NAME')
 
 def main():
     parser = argparse.ArgumentParser(
@@ -20,8 +25,32 @@ def main():
         help='use only if running locally, and not intending \
             to interact with s3'
     )
+    parser.add_argument(
+        '--sample',
+        default=5,
+        type=int,
+        help='Defualt 5. The number of samples \
+            from source archive to process. If 0 \
+            or --all flag is used will be ignored'
+    )
+    parser.add_argument(
+        '--all',
+        action='store_true',
+        help='overrides sample size. \
+            All archives will be processed if used!'
+    )
     args = parser.parse_args()
+    if args.all or args.sample < 1:
+        args.sample = None
     print(args)
+
+    archiveExtract = ArchiveExtract(
+        local=False,
+        test=args.test)
+
+    s3access = S3Access(bucket)
+    archive_keys = s3access.get_sources(size=args.sample)
+    print(archive_keys)
 
 if __name__ == '__main__':
     main()

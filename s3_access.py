@@ -16,11 +16,25 @@ class S3Access:
         self.bucket_name = bucket_name
         self.s3_client = boto3.client('s3')
 
+    def get_root_sources(self):
+        """ Gets everything from root """
+        extracted = self.s3_client.list_objects_v2(
+            Bucket=self.bucket_name,
+            Prefix = '' # To exclude what is in folders
+        )
+        return extracted
+
+    def get_sources(self, size=None):
+        if size is None or size ==0:
+            return self.get_root_sources()
+        else:
+            return self.list_root_random(size=size)
+
     def list_root_random(self, size=5):
         """ For testing. Gets random files in Root."""
         extracted = self.s3_client.list_objects_v2(
             Bucket=self.bucket_name,
-            Prefix = '' # To exclude what is folders
+            Prefix = '' # To exclude what is in folders
         )
         return random.sample(extracted, k=size)
 
