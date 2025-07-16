@@ -82,6 +82,7 @@ def main():
         workspace = os.path.join('/','mnt','ebs_volume')
         save_point = os.path.join(workspace, str(job))
         archive_object = s3access.get_object(i)
+        print(f'--extracting ${i}')
         archive_object = io.BytesIO(archive_object)
         extractor = s3extractors.get_extractor(i)
         extractor.extract(archive_object=archive_object, 
@@ -92,6 +93,7 @@ def main():
         archiveTraverse.traverse_path(save_point)
         #shutil.rmtree(save_point)
 
+        print('\n extractions completed \n')
 
 if __name__ == '__main__':
     main()
