@@ -7,7 +7,7 @@ import os
 from randomizer import rename
 from s3_access import S3Access
 
-class ArchiveExtract():
+class ArchiveTraverse():
     def __init__(self, local=False, test=True):
         self.local = local
         self.test = test

@@ -3,8 +3,11 @@
 ##############################################
 
 import argparse
+import uuid
 import os
-from run_extract import ArchiveExtract
+import shutil
+import s3extractors
+from run_extract import ArchiveTraverse
 from s3_access import S3Access
 
 bucket = os.environ.get('S3_BUCKET_NAME')
@@ -44,7 +47,7 @@ def main():
         args.sample = None
     print(args)
 
-    archiveExtract = ArchiveExtract(
+    archiveTraverse = ArchiveTraverse(
         local=False,
         test=args.test)
 
@@ -69,6 +72,24 @@ def main():
         print('oh noes... went one layer too deep')
     else:
         print("Content List stayed at expected depth")
+
+    print('\n attempting extractions! \n')
+
+
+    for i in items:
+        job = uuid.uuid()
+        workspace = os.path('/mnt/ebs_volume')
+        save_point = os.path.join(workspace, str(job))
+        archive_object = s3access.get_object(i)
+        extractor = s3extractors.get_extractor(i)
+        extractor.extract(archive_object=archive_object, 
+                          archive_key=i, 
+                          destination_path=save_point)
+
+        # Traverse the extracted folder, move to s3
+        archiveTraverse.traverse_path(save_point)
+        #shutil.rmtree(save_point)
+
 
 if __name__ == '__main__':
     main()
