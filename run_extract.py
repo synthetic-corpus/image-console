@@ -4,13 +4,58 @@
 ########################################
 import os
 import re
+import uuid
 from randomizer import rename
 from s3_access import S3Access
+import extractors # for edge case of zips within zips
 
 class ArchiveTraverse():
     def __init__(self, local=False, test=True):
         self.local = local
         self.test = test
+
+    @staticmethod
+    def detect_archive(path):
+        """ For cases of archives within archives"""
+        _, ext = os.path.splitext(file_path_or_name)
+        normalized_ext = ext.lower()
+        if path.lower().endswith('.tar.gz'):
+            normalized_ext = '.gz'
+        elif path.lower().endswith('.tar.bz2'):
+            normalized_ext = '.bz2'
+        elif path.lower().endswith('.tar.xz'):
+            normalized_ext = '.xz'
+        elif path.lower().endswith('.tgz'):
+            normalized_ext = '.tgz'
+        elif path.lower().endswith('.tbz2'):
+            normalized_ext = '.tbz2'
+        elif path.lower().endswith('.txz'):
+            normalized_ext = '.txz'
+        elif path.lower().endswith('.tar'):
+            normalized_ext = '.tar'
+        if normalized_ext in [
+            '.gz','.bz2','.xz','.tgz','.tbz2','.txz','.tar',
+            '.rar','.7z','zip']:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def extract_to_stack(job_root, archive_file):
+        """ This handles the case of a Zip file 
+        Found within the Zip Files...
+        @job_root this is found in the Traverse function.
+          Intended to extract the contents of the zip
+          file to a new folder there.
+        """
+        save_point = os.path.join(job_root, str(uuid.uuid4()))
+        print('Extracting a nested acrhive!')
+        extractor = extractors.get_extractor(archive_file)
+        extractor.extract(
+            archive_path=archive_file, 
+            destination_path=save_point)
+
+        return save_point # will be added to stack
 
     @staticmethod
     def get_file_name(path):
@@ -64,6 +109,8 @@ class ArchiveTraverse():
 
     def traverse_path(self, directory):
         """ Just get the files and list them """
+        extraction_root = directory
+        print(f'Extraction root for this task = ${extraction_root}')
         folder_stack = [directory]
         all_files = []
 
@@ -71,9 +118,17 @@ class ArchiveTraverse():
             current_folder = folder_stack.pop()
             contents = self.list_directory_contents(current_folder)
             for item in contents:
-                if item[1]:
+                if item[1]: # if is folder
                     folder_stack.append(item[0])
                 else:
+                    # handle two cases:
+                    # If Compressed, extract to folder and
+                    # palce folder in folder_stack
+                    if self.detect_archive(item[0]):
+                        msg = f'{item[0]} is a an archive! Extracting under ${current_folder}'
+                        folder = self.extract_to_stack(extraction_root, item[0])
+                        folder_stack.appen(folder)
+                    # Is not .jpg, .png, or .jpeg, continue
                     file_name = self.get_file_name(item[0])
                     all_files.append((item[0],file_name))
         for file_tuple in all_files:
