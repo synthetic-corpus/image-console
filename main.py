@@ -77,7 +77,7 @@ def main():
 
 
     for i in items:
-        job = uuid.uuid()
+        job = uuid.uuid4()
         workspace = os.path('/mnt/ebs_volume')
         save_point = os.path.join(workspace, str(job))
         archive_object = s3access.get_object(i)
