@@ -129,8 +129,10 @@ class ArchiveTraverse():
                         folder = self.extract_to_stack(extraction_root, item[0])
                         folder_stack.appen(folder)
                     # Is not .jpg, .png, or .jpeg, continue
-                    file_name = self.get_file_name(item[0])
-                    all_files.append((item[0],file_name))
+                    else:
+                        file_name = self.get_file_name(item[0])
+                        if file_name.split('.')[1] in ['jpeg','jpg','png']:
+                            all_files.append((item[0],file_name))
         for file_tuple in all_files:
             """ file_tuple = (path, filename) """
             bucket = os.environ.get('S3_BUCKET_NAME')
@@ -143,7 +145,7 @@ class ArchiveTraverse():
                         sub = f'storing to s3: {bucket}'
                     msg = f'{file_tuple[1]} becomes {r_name} - {sub}'
                     print(msg)
-                    if self.test == False:
+                    if self.test == False and r_name is not None:
                         key = f'upload/{r_name}'
                         s3access = S3Access(bucket)
                         s3access.put_object(key, file_object)
