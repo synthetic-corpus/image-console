@@ -6,6 +6,7 @@ import argparse
 import uuid
 import os
 import shutil
+import io
 import s3extractors
 from run_extract import ArchiveTraverse
 from s3_access import S3Access
@@ -81,6 +82,7 @@ def main():
         workspace = os.path.join('/','mnt','ebs_volume')
         save_point = os.path.join(workspace, str(job))
         archive_object = s3access.get_object(i)
+        archive_object = io.BytesIO(archive_object)
         extractor = s3extractors.get_extractor(i)
         extractor.extract(archive_object=archive_object, 
                           archive_key=i, 
