@@ -50,7 +50,24 @@ def main():
 
     s3access = S3Access(bucket)
     archive_keys = s3access.get_sources(size=args.sample)
-    print(archive_keys)
+    items = archive_keys['Content']
+    items = [x for x in items if x['Key'].find('/') == -1]
+
+    print('Items found. List first 10')
+    for i in range(10):
+        s3_thing = items[i]
+        print(repr(s3_thing))
+
+    print('Checking for ruling out depth')
+    found = False
+    for i in items:
+        if i['Key'].find('/') > -1:
+            print(i['Key'])
+            found = True
+    if found:
+        print('oh noes... went one layer too deep')
+    else:
+        print("Content List stayed at expected depth")
 
 if __name__ == '__main__':
     main()
