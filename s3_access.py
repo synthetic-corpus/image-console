@@ -22,7 +22,9 @@ class S3Access:
             Bucket=self.bucket_name,
             Prefix = '' # To exclude what is in folders
         )
-        return extracted
+        keys = extracted['Contents']
+        keys = [x['Key'] for x in keys if x['Key'].find('/') == -1]
+        return keys
 
     def get_sources(self, size=None):
         if size is None or size ==0:
@@ -36,7 +38,9 @@ class S3Access:
             Bucket=self.bucket_name,
             Prefix = '' # To exclude what is in folders
         )
-        return random.sample(extracted, k=size)
+        keys = extracted['Contents']
+        keys = [x['Key'] for x in keys if x['Key'].find('/') == -1]
+        return random.sample(keys, k=size)
 
     def list_sources(self):
         """
