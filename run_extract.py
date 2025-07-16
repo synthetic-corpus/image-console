@@ -3,7 +3,7 @@
 # Meant to be run with main()          #
 ########################################
 import os
-
+import re
 from randomizer import rename
 from s3_access import S3Access
 
