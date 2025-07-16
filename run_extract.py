@@ -94,4 +94,5 @@ class ArchiveTraverse():
                         s3access = S3Access(bucket)
                         s3access.put_object(key, file_object)
             except Exception as e:
+                print(file_tuple)
                 print(e)
