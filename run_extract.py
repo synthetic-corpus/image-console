@@ -127,7 +127,7 @@ class ArchiveTraverse():
                     if self.detect_archive(item[0]):
                         msg = f'{item[0]} is a an archive! Extracting under ${current_folder}'
                         folder = self.extract_to_stack(extraction_root, item[0])
-                        folder_stack.appen(folder)
+                        folder_stack.append(folder)
                     # Is not .jpg, .png, or .jpeg, continue
                     else:
                         file_name = self.get_file_name(item[0])

@@ -92,8 +92,9 @@ def main():
         # Traverse the extracted folder, move to s3
         archiveTraverse.traverse_path(save_point)
         #shutil.rmtree(save_point)
+        print('--extractions done for this file')
 
-        print('\n extractions completed \n')
+    print('\n all extractions completed \n')
 
 if __name__ == '__main__':
     main()
