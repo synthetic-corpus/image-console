@@ -137,7 +137,7 @@ class ArchiveTraverse():
             """ file_tuple = (path, filename) """
             bucket = os.environ.get('S3_BUCKET_NAME')
             try:
-                with open(file_tuple[0], 'r') as file_object:
+                with open(file_tuple[0], 'rb') as file_object:
                     r_name = rename(file_tuple[1])
                     if self.test:
                         sub = 'dry run only'
