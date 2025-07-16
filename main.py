@@ -53,9 +53,11 @@ def main():
 
 
     print('Items found. List first 10')
-    for i in range(10):
-        s3_thing = items[i]
-        print(s3_thing)
+    for i, object in enumerate(items):
+        if i >= 9:
+            break
+        else:
+            print(object)
 
     print('Checking for ruling out depth')
     found = False
