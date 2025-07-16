@@ -17,7 +17,7 @@ class ArchiveTraverse():
     @staticmethod
     def detect_archive(path):
         """ For cases of archives within archives"""
-        _, ext = os.path.splitext(file_path_or_name)
+        _, ext = os.path.splitext(path)
         normalized_ext = ext.lower()
         if path.lower().endswith('.tar.gz'):
             normalized_ext = '.gz'
