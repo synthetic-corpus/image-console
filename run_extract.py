@@ -74,7 +74,6 @@ class ArchiveTraverse():
                 if item[1]:
                     folder_stack.append(item[0])
                 else:
-                    all_files.append(item[0])
                     file_name = self.get_file_name(item[0])
                     all_files.append((item[0],file_name))
         for file_tuple in all_files:
