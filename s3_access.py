@@ -23,7 +23,7 @@ class S3Access:
             Prefix = '_compressed' # hard coding this for funzies!
         )
         keys = extracted['Contents']
-        keys = [x['Key'] for x in keys if x['Key'].find('/') == -1]
+        # keys = [x['Key'] for x in keys if x['Key'].find('/') == -1]
         return keys
 
     def get_sources(self, size=None):
