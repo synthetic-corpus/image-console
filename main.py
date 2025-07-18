@@ -63,16 +63,16 @@ def main():
         else:
             print(object)
 
-    print('Checking for ruling out depth')
-    found = False
-    for i in items:
-        if i.find('/') > -1:
-            print(i)
-            found = True
-    if found:
-        print('oh noes... went one layer too deep')
-    else:
-        print("Content List stayed at expected depth")
+    #print('Checking for ruling out depth')
+    #found = False
+    #for i in items:
+    #    if i.find('/') > -1:
+    #       print(i)
+    #       found = True
+    #if found:
+    #   print('oh noes... went one layer too deep')
+    #else:
+    #    print("Content List stayed at expected depth")
 
     print('\n attempting extractions! \n')
 

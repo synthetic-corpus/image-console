@@ -23,7 +23,7 @@ class S3Access:
             Prefix = '_compressed' # hard coding this for funzies!
         )
         keys = extracted['Contents']
-        # keys = [x['Key'] for x in keys if x['Key'].find('/') == -1]
+        keys = [x['Key'] for x in keys]
         return keys
 
     def get_sources(self, size=None):
@@ -39,7 +39,7 @@ class S3Access:
             Prefix = '_compressed' # To exclude what is in folders
         )
         keys = extracted['Contents']
-        # keys = [x['Key'] for x in keys if x['Key'].find('/') == -1]
+        keys = [x['Key'] for x in keys]
         return random.sample(keys, k=size)
 
     def list_sources(self):
