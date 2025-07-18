@@ -20,7 +20,7 @@ class S3Access:
         """ Gets everything from root """
         extracted = self.s3_client.list_objects_v2(
             Bucket=self.bucket_name,
-            Prefix = '' # To exclude what is in folders
+            Prefix = '_compressed' # hard coding this for funzies!
         )
         keys = extracted['Contents']
         keys = [x['Key'] for x in keys if x['Key'].find('/') == -1]
@@ -36,10 +36,10 @@ class S3Access:
         """ For testing. Gets random files in Root."""
         extracted = self.s3_client.list_objects_v2(
             Bucket=self.bucket_name,
-            Prefix = '' # To exclude what is in folders
+            Prefix = '_compressed' # To exclude what is in folders
         )
         keys = extracted['Contents']
-        keys = [x['Key'] for x in keys if x['Key'].find('/') == -1]
+        # keys = [x['Key'] for x in keys if x['Key'].find('/') == -1]
         return random.sample(keys, k=size)
 
     def list_sources(self):
